@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The Generics | Store</title>
+        <meta name="description" content="This is the description">
+        <link rel="stylesheet" href="styles.css" />
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script src="https://checkout.stripe.com/checkout.js" defer></script>
+        <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+        
+        <script src="https://js.stripe.com/v3/"></script>
+
+
+        <!-- <script src="store.js" defer></script> -->
+    </head>
+    <body>
+
+
+
+        <header class="main-header">
+            <nav class="main-nav nav">
+                <ul>
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="/store">STORE</a></li>
+                    <li><a href="about.html">ABOUT</a></li>
+                    <li><a href="/login">LOGIN</a></li>
+                    <li><a href="/sell">SELL</a></li>
+                
+                </ul>
+            </nav>
+            <h1 class="band-name band-name-large">The Generics</h1>
+        </header>
+
+        <section class="container content-section">
+
+            <div id="loginbox" style="margin-top:50px;" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">                    
+                <div class="panel panel-info" >
+                        <div class="panel-heading">
+                            <div class="panel-title">Sign In</div>
+                            <div style="float:right; font-size: 80%; position: relative; top:-10px"><a href="#">Forgot password?</a></div>
+                        </div>     
+    
+                        <div style="padding-top:30px" class="panel-body" >
+    
+                            <div style="display:none" id="login-alert" class="alert alert-danger col-sm-12"></div>
+                                
+                            <form id="loginform" class="form-horizontal" role="form">
+                                        
+                                <div style="margin-bottom: 25px" class="input-group">
+                                            <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                                            <input id="login-username" type="text" class="form-control" name="username" value="" placeholder="username or email">                                        
+                                        </div>
+                                    
+                                <div style="margin-bottom: 25px" class="input-group">
+                                            <span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+                                            <input id="login-password" type="password" class="form-control" name="password" placeholder="password">
+                                        </div>
+                                        
+    
+                                    
+                                <div class="input-group">
+                                          <div class="checkbox">
+                                            <label>
+                                              <input id="login-remember" type="checkbox" name="remember" value="1"> Remember me
+                                            </label>
+                                          </div>
+                                        </div>
+    
+    
+                                    <div style="margin-top:10px" class="form-group">
+                                        <!-- Button -->
+    
+                                        <div class="col-sm-12 controls">
+                                          <a id="btn-login" href="#" class="btn btn-success">Login  </a>
+                                          <a id="btn-fblogin" href="#" class="btn btn-primary">Login with Facebook</a>
+    
+                                        </div>
+                                    </div>
+    
+    
+                                    <div class="form-group">
+                                        <div class="col-md-12 control">
+                                            <div style="border-top: 1px solid#888; padding-top:15px; font-size:85%" >
+                                                Don't have an account! 
+                                            <a id="signUp" href="#">
+                                                Sign Up Here
+                                            </a>
+                                            </div>
+                                        </div>
+                                    </div>    
+                                </form>     
+    
+    
+    
+                            </div>                     
+                        </div>  
+            </div>
+            <div id="signupbox" style="display:none; margin-top:50px" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <div class="panel-title">Sign Up</div>
+                                <div style="float:right; font-size: 85%; position: relative; top:-10px"><a id="signinlink" href="#" onclick="$('#signupbox').hide(); $('#loginbox').show()">Sign In</a></div>
+                            </div>  
+                            <div class="panel-body" >
+                                <form id="signupform" class="form-horizontal" role="form">
+                                    
+                                    <div id="signupalert" style="display:none" class="alert alert-danger">
+                                        <p>Error:</p>
+                                        <span></span>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="email" class="col-md-3 control-label">Email</label>
+                                        <div class="col-md-9">
+                                            <input type="text" class="form-control" name="email" placeholder="Email Address">
+                                        </div>
+                                    </div>
+                                        
+                                    <div class="form-group">
+                                        <label for="firstname" class="col-md-3 control-label">First Name</label>
+                                        <div class="col-md-9">
+                                            <input type="text" class="form-control" name="firstname" placeholder="First Name">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="lastname" class="col-md-3 control-label">Last Name</label>
+                                        <div class="col-md-9">
+                                            <input type="text" class="form-control" name="lastname" placeholder="Last Name">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="password" class="col-md-3 control-label">Password</label>
+                                        <div class="col-md-9">
+                                            <input type="password" class="form-control" name="passwd" placeholder="Password">
+                                        </div>
+                                    </div>
+                                        
+                                    <div class="form-group">
+
+                                            <form action="/charge" method="post" id="payment-form">
+                                                <div class="form-row">
+                                                  <label for="card-element">
+                                                    Credit or debit card
+                                                  </label>
+                                                  <div id="card-element">
+                                                  </div>
+                                              
+                                                  <div id="card-errors" role="alert"></div>
+                                                </div>
+                                              
+                                              </form>
+                                              
+                                    </div>
+    
+                                    <div class="form-group">
+                                        <!-- Button -->                                        
+                                        <div class="col-md-offset-3 col-md-12">
+                                            <button id="btn-signup" type="button" class="btn btn-info"><i class="icon-hand-right"></i> &nbsp Sign Up</button>
+
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    
+                                </form>
+                             </div>
+                        </div>
+                        
+             </div>
+
+        </section>
+        
+        <footer class="main-footer">
+            <div class="container main-footer-container">
+                <h3 class="band-name">The Generics</h3>
+                <ul class="nav footer-nav">
+                    <li>
+                        <a href="https://www.youtube.com" target="_blank">
+                            <img src="Images/YouTube Logo.png">
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.spotify.com" target="_blank">
+                            <img src="Images/Spotify Logo.png">
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.facebook.com" target="_blank">
+                            <img src="Images/Facebook Logo.png">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </footer>
+    </body>
+    <script>
+        
+        var stripe = Stripe('pk_test_51Hbjw6BzuE6jzAWNWXu9rBpioSd8oS3g2T7NoF8nNCLbv0KEPxPYsnlmVyRocyCiZSrbuVlNDczBYhgGFbqdSnB600rLo0zPMz');
+
+        // Create an instance of Elements.
+        var elements = stripe.elements();
+
+        // Custom styling can be passed to options when creating an Element.
+        var style = {
+        base: {
+            // Add your base input styles here. For example:
+            fontSize: '16px',
+            color: '#32325d',
+        },
+        };
+
+        // Create an instance of the card Element.
+        var card = elements.create('card', {style: style});
+
+        // Add an instance of the card Element into the `card-element` <div>.
+        card.mount('#card-element');
+
+        // Create a token or display an error when the form is submitted.
+        var form = document.getElementById('payment-form');
+
+
+
+        var sign_Up = false
+        document.getElementById('signUp').addEventListener('click',function(){
+
+            $('#loginbox').hide(); $('#signupbox').show()
+            sign_Up = true
+            console.log(sign_Up)
+
+        })
+        document.getElementById('signinlink').addEventListener('click',function(){
+
+            window.sign_Up = false
+            console.log(sign_Up)
+
+        })
+        var form = document.getElementById('signupform')
+
+        document.getElementById('btn-signup').addEventListener('click',function(){
+            
+            console.log('press')
+            stripe.createToken(card).then(function(result) {
+            if (result.error) {
+            // Inform the customer that there was an error.
+            var errorElement = document.getElementById('card-errors');
+            errorElement.textContent = result.error.message;
+            } else {
+            // Send the token to your server.
+            console.log(result);
+
+            fetch('/signUp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+
+                    user:{
+                        email: $("#signupform input[name=email]").val(),
+                        firstName: $("#signupform input[name=firstname]").val(),
+                        lastName: $("#signupform input[name=lastname]").val(),
+                        password: $("#signupform input[name=passwd]").val(),
+                    },
+                    token:result.token.id
+
+                })
+            }).then(function(res){
+
+                // console.log('Item for sale')
+                // window.location.replace("http://localhost:3000/");
+
+            })
+
+
+            }
+        });
+        
+        })
+
+    </script>
+</html>
+    

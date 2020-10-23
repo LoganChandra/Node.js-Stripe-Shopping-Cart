@@ -3,39 +3,60 @@
     {
       "id": 1,
       "name": "Album 1",
+      "size": 10,
       "price": 1299,
+      "bidPrice": 1000,
       "imgName": "Album 1.png"
     },
     {
       "id": 2,
       "name": "Album 2",
+      "size": 10,
       "price": 1499,
+      "bidPrice": 1000,
       "imgName": "Album 2.png"
     },
     {
       "id": 3,
       "name": "Album 3",
+      "size": 10,
       "price": 999,
+      "bidPrice": 1000,
       "imgName": "Album 3.png"
     },
     {
       "id": 4,
       "name": "Album 4",
+      "size": 10,
       "price": 1999,
+      "bidPrice": 1000,
       "imgName": "Album 4.png"
+    },
+    {
+      "id": 7,
+      "name": "Nike",
+      "size": 10,
+      "price": 699,
+      "bidPrice": 1000,
+      "imgName": "Cofee.png"
+
     }
   ],
   "merch": [
     {
       "id": 5,
       "name": "T-Shirt",
+      "size": 10,
       "price": 1999,
+      "bidPrice": 1000,
       "imgName": "Shirt.png"
     },
     {
       "id": 6,
       "name": "Coffee Cup",
+      "size": 10,
       "price": 699,
+      "bidPrice": 1000,
       "imgName": "Cofee.png"
     }
   ]

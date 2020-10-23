@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The Generics | Store</title>
+        <meta name="description" content="This is the description">
+        <link rel="stylesheet" href="styles.css" />
+        <script src="https://checkout.stripe.com/checkout.js" defer></script>
+        <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+        <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+        <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+        <script src="https://js.stripe.com/v3/"></script>
+
+    </head>
+    <body>
+        <header class="main-header">
+            <nav class="main-nav nav">
+                <ul>
+                    <li><a href="index.html">HOME</a></li>
+                    <li><a href="/store">STORE</a></li>
+                    <li><a href="about.html">ABOUT</a></li>
+                    <li><a href="/login">LOGIN</a></li>
+                    <li><a href="/sell">SELL</a></li>
+                
+                </ul>
+            </nav>
+            <h1 class="band-name band-name-large">The Generics</h1>
+        </header>
+
+        <section class="container content-section">
+
+            <div id="signupbox" style="margin-top:50px" class="mainbox col-md-6 col-md-offset-3 col-sm-8 col-sm-offset-2">
+                        <div class="panel panel-info">
+                            <div class="panel-heading">
+                                <div class="panel-title">SELL</div>
+                            </div>  
+                            <div class="panel-body" >
+                                <form id="signupform" class="form-horizontal" role="form">
+                                    
+                                    <div id="signupalert" style="display:none" class="alert alert-danger">
+                                        <p>Error:</p>
+                                        <span></span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="item" class="col-md-3 control-label">Item</label>
+                                        <div class="col-md-9">
+                                            <input type="text" class="form-control" name="item" placeholder="Nike Air Max">
+                                        </div>
+                                    </div>
+                                        
+                                    <div class="form-group">
+                                        <label for="size" class="col-md-3 control-label">Size</label>
+                                        <div class="col-md-9">
+                                            <input type="number" class="form-control" name="size" placeholder="10">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="AskPrice" class="col-md-3 control-label">Ask Price</label>
+                                        <div class="col-md-9">
+                                            <input type="number" class="form-control" name="AskPrice" placeholder="700">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="BidPrice" class="col-md-3 control-label">Bid Price</label>
+                                        <div class="col-md-9">
+                                            <input type="number" class="form-control" name="BidPrice" placeholder="600">
+                                        </div>
+                                    </div>
+                                        
+                                    <!-- <div class="form-group">
+                                        <label for="icode" class="col-md-3 control-label">Invitation Code</label>
+                                        <div class="col-md-9">
+                                            <input type="text" class="form-control" name="icode" placeholder="">
+                                        </div>
+                                    </div> -->
+                                    
+                                    <form action="/charge" method="post" id="payment-form">
+                                        <div class="form-row">
+                                          <label for="card-element">
+                                            Credit or debit card
+                                          </label>
+                                          <div id="card-element">
+                                          </div>
+                                      
+                                          <div id="card-errors" role="alert"></div>
+                                        </div>
+                                      
+                                      </form>
+                                    <div class="form-group">
+                                                                              
+                                        <div class="col-md-offset-3 col-md-9">
+                                            <button id="btn-sell" type="button" class="btn btn-info"><i class="icon-hand-right"></i> &nbsp Sell Item</button>
+
+                                        </div>
+                                    </div>
+                                </form>
+                             </div>
+                        </div>
+                    
+             </div>
+
+        </section>
+        
+        <footer class="main-footer">
+            <div class="container main-footer-container">
+                <h3 class="band-name">The Generics</h3>
+                <ul class="nav footer-nav">
+                    <li>
+                        <a href="https://www.youtube.com" target="_blank">
+                            <img src="Images/YouTube Logo.png">
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.spotify.com" target="_blank">
+                            <img src="Images/Spotify Logo.png">
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.facebook.com" target="_blank">
+                            <img src="Images/Facebook Logo.png">
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </footer>
+    </body>
+    <script>
+        
+        
+        // var stripe = Stripe('pk_test_51Hbjw6BzuE6jzAWNWXu9rBpioSd8oS3g2T7NoF8nNCLbv0KEPxPYsnlmVyRocyCiZSrbuVlNDczBYhgGFbqdSnB600rLo0zPMz');
+
+        // // Create an instance of Elements.
+        // var elements = stripe.elements();
+
+        // // Custom styling can be passed to options when creating an Element.
+        // var style = {
+        // base: {
+        //     // Add your base input styles here. For example:
+        //     fontSize: '16px',
+        //     color: '#32325d',
+        // },
+        // };
+
+        // // Create an instance of the card Element.
+        // var card = elements.create('card', {style: style});
+
+        // // Add an instance of the card Element into the `card-element` <div>.
+        // card.mount('#card-element');
+
+        // // Create a token or display an error when the form is submitted.
+        // var form = document.getElementById('payment-form');
+
+        // var form = document.getElementById('signupform')
+        function uuidv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        // document.getElementById('btn-sell').addEventListener('click',function(){
+        //     console.log('press')
+
+        //     fetch('/forSale', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'Accept': 'application/json'
+        //         },
+        //         body: JSON.stringify({
+
+        //             id: uuidv4(),
+        //             name: $("#signupform input[name=item]").val(),
+        //             price: $("#signupform input[name=AskPrice]").val(),
+        //             size: $("#signupform input[name=size]").val(),
+        //             bidPrice: $("#signupform input[name=BidPrice]").val(),
+        //             imgName: "Cofee.png"
+        //         })
+        //     }).then(function(res){
+        //         // window.location.replace("http://localhost:3000/");
+        //     })
+
+
+
+            
+        // })
+
+
+/////////////////////////////////////////////
+
+        var orderData = {
+            items: [{ id: "photo-subscription" }],
+            currency: "myr"
+        };
+
+        fetch("/stripe-key")
+        .then(function(result) {
+        return result.json();
+        })
+        .then(function(data) {
+        return setupElements(data);
+        })
+        .then(function({ stripe, card, clientSecret }) {
+        document.querySelector("#btn-sell").addEventListener("click", function(evt) {
+            evt.preventDefault();
+            pay(stripe, card, clientSecret);
+        });
+        });
+
+        var setupElements = function(data) {
+        stripe = Stripe(data.publicKey);
+        /* ------- Set up Stripe Elements to use in checkout form ------- */
+        var elements = stripe.elements();
+        var style = {
+            base: {
+            color: "#32325d",
+            fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+            fontSmoothing: "antialiased",
+            fontSize: "16px",
+            "::placeholder": {
+                color: "#aab7c4"
+            }
+            },
+            invalid: {
+            color: "#fa755a",
+            iconColor: "#fa755a"
+            }
+        };
+
+        var card = elements.create("card", { style: style });
+        card.mount("#card-element");
+
+        return {
+            stripe: stripe,
+            card: card,
+            clientSecret: data.clientSecret
+        };
+        };
+
+        var handleAction = function(clientSecret) {
+            stripe.handleCardAction(clientSecret).then(function(data) {
+                if (data.error) {
+                showError("Your card was not authenticated, please try again");
+                } else if (data.paymentIntent.status === "requires_confirmation") {
+                fetch("/forSale", {
+                    method: "POST",
+                    headers: {
+                    "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                    paymentIntentId: data.paymentIntent.id,
+                    id: uuidv4(),
+                    name: $("#signupform input[name=item]").val(),
+                    price: $("#signupform input[name=AskPrice]").val(),
+                    size: $("#signupform input[name=size]").val(),
+                    bidPrice: $("#signupform input[name=BidPrice]").val(),
+                    imgName: "Cofee.png"
+                    })
+                })
+                    .then(function(result) {
+                    return result.json();
+                    })
+                }
+            });
+        };
+
+
+        var pay = function(stripe, card) {
+            var cardholderName = 'penalty';
+            var data = {
+                billing_details: {}
+            };
+
+            if (cardholderName) {
+                data["billing_details"]["name"] = cardholderName;
+            }
+
+            // Collect payment details
+            stripe
+                .createPaymentMethod("card", card, data)
+                .then(function(result) {
+                if (result.error) {
+                    showError(result.error.message);
+                } else {
+                    orderData.paymentMethodId = result.paymentMethod.id;
+
+                    return fetch("/forSale", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(orderData)
+                    });
+                }
+                })
+                .then(function(result) {
+                    console.log(result)
+                return result;
+                })
+                .then(function(paymentData) {
+                if (paymentData.requiresAction) {
+                    // Request authentication
+                    handleAction(paymentData.clientSecret);
+                } else if (paymentData.error) {
+                    // showError(paymentData.error);
+                    console.log('error payment.error')
+                } else {
+                    // orderComplete(paymentData.clientSecret);
+                    // console.log('error paymentData clientSecret')
+                }
+                });
+            };
+
+    </script>
+</html>
+    

@@ -14,47 +14,302 @@ app.set('view engine', 'ejs')
 app.use(express.json())
 app.use(express.static('public'))
 
+app.get("/stripe-key", (req, res) => {
+  res.send({ publicKey: process.env.STRIPE_PUBLIC_KEY });
+});
+
+//renders
 app.get('/store', function(req, res) {
   fs.readFile('items.json', function(error, data) {
-    if (error) {
-      res.status(500).end()
-    } else {
-      res.render('store.ejs', {
-        stripePublicKey: stripePublicKey,
-        items: JSON.parse(data)
-      })
-    }
+      if (error) {
+          res.status(500).end()
+      } else {
+          res.render('store.ejs', {
+              stripePublicKey: stripePublicKey,
+              items: JSON.parse(data)
+          })
+      }
   })
 })
+app.get('/login', function(req, res) {
+  res.render('login.ejs', {
+      // stripePublicKey: stripePublicKey,
+      // items: JSON.parse(data)
+  })
+  console.log(req)
+})
+
+app.get('/sell', function(req, res) {
+  res.render('sell.ejs', {
+      // stripePublicKey: stripePublicKey,
+      // items: JSON.parse(data)
+  })
+  console.log(req)
+})
+
+
+app.post('/signUpCust', function(req, res) {
+  let userData = req.body.user
+  let token = req.body.token
+  console.log(userData, token)
+
+  //Creating Customer
+  const customer = stripe.customers.create({
+    description: userData.firstName + 'Customer',
+    email: userData.email,
+    name: userData.firstName + ' ' + userData.lastName,
+
+  });
+
+})
+
+
+
+app.post('/signUp', function(req, res) {
+  let userData = req.body.user
+  let token = req.body.token
+  console.log(userData, token)
+
+
+  //Creating Customer
+  const account = stripe.accounts.create({
+    type: 'standard',
+    country: 'MY',
+    email: userData.email,
+    business_type: 'individual',
+    individual: {
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+    },
+  }).then(function(response) {
+      console.log('Account:',response)
+
+      const customer = stripe.customers.create({
+        description: userData.firstName + ' - Customer',
+        name: userData.firstName + ' ' + userData.lastName,
+        email: userData.email,
+        source: token,
+      }, {
+        stripe_account: response.id,
+      }).then(function(custRes){
+
+        console.log('Customer: ', custRes)
+        console.log(custRes, response.id)
+
+        userData['custId'] = custRes.id //saving customer id
+        userData['acctId'] = response.id //saving customer id
+        console.log(userData)
+
+        let writedata = JSON.stringify(userData);
+        fs.writeFileSync('users.json', writedata);
+
+      }).catch(function(error){
+          console.log('Customer not created')
+          error.status(500).end()
+      
+      })
+
+      
+
+      // //Creating card for the customer
+      // const card = stripe.customers.createSource(
+      //   response.id, {
+      //       source: token
+      //   }
+      // ).then(function(response) {
+      //     console.log('card created')
+      //     console.log(response.id)
+      //     userData['cardId'] = response.id //saving customer id
+      //     let writedata = JSON.stringify(userData);
+      //     fs.writeFileSync('users.json', writedata);
+
+      //     console.log(userData)
+      // }).catch(function(){
+      //   console.log('Failed to create Card')
+      //   res.status(500).end()
+
+      // })
+
+      console.log('Sign in Successful')
+
+  }).catch(function() {
+      console.log('Sign In Fail')
+      res.status(500).end()
+  })
+
+})
+
+// app.post('/forSale', function(req, res) {
+
+//   let userData = req.body
+//   fs.readFile('users.json', function(error, data) {
+
+//     const customer = stripe.customers.create({
+//     }, {
+//       stripeAccount: data.id,
+//     });
+//     console.log(customer)
+//     const paymentIntent = stripe.paymentIntents.create({
+//       amount: userData.price,
+//       currency: 'myr',
+//       payment_method_types: ['card'],
+//       // application_fee_amount: 200,//application fee is necessary
+//       customer: data.id,
+//       transfer_data: {
+//         destination: data.id,
+//       },
+//     }).then(function(response) {
+//           console.log('card created')
+//           console.log(response.id)
+//           // userData['cardId'] = response.id //saving customer id
+//           data['merch'].push(userData)
+//           console.log(data)
+//           let writedata = JSON.stringify(data);
+
+//           fs.writeFileSync('users.json', writedata);
+
+//           console.log(data)
+
+//       })
+
+//   })
+// })
+  app.post("/forSale", function(req, res) {
+    const { paymentMethodId, paymentIntentId, items, currency, id, name, price, size, bidPrice,imgName } = req.body;
+  
+    const orderAmount = 1500;
+    var loggedIn = JSON.parse(fs.readFileSync('users.json', 'utf8'));
+    console.log('CREATING PENALTY ON BEHALF OF: ', loggedIn)
+
+    try {
+      let intent;
+      if (!paymentIntentId) {
+
+        const pmRes = null;
+        const paymentMethod = stripe.paymentMethods.create({
+          customer: loggedIn.custId,
+          payment_method: paymentMethodId,
+        }, {
+          stripeAccount: loggedIn.acctId,
+        }).then(function(res){
+          console.log('Payment method created: ', res)
+          pmRes = res 
+        })
+
+        // Create new PaymentIntent
+        intent = stripe.paymentIntents.create({
+          amount: orderAmount,
+          currency: currency,
+          payment_method: pmRes.id,
+          confirmation_method: "manual",
+          capture_method: "manual",
+          confirm: true,
+          customer: loggedIn.custId,
+        }, {
+          stripe_account: loggedIn.acctId,
+        }
+        );
+        console.log(intent)
+      } else {
+        // Confirm the PaymentIntent to place a hold on the card
+        intent = stripe.paymentIntents.confirm(paymentIntentId);
+        // console.log(intent)
+      }
+  
+      if (intent.status === "requires_capture") {
+        console.log("❗ Charging the card for: " + intent.amount_capturable);
+        // Because capture_method was set to manual we need to manually capture in order to move the funds
+        // You have 7 days to capture a confirmed PaymentIntent
+        // To cancel a payment before capturing use .cancel() (https://stripe.com/docs/api/payment_intents/cancel)
+        intent = stripe.paymentIntents.capture(intent.id);
+      }
+      
+      var itemData = JSON.parse(fs.readFileSync('items.json', 'utf8'));
+      var itemSold = {
+        id: id,
+        name: name,
+        price: price,
+        size: size,
+        bidPrice: bidPrice,
+        imgName: imgName,
+        seller:{
+          custId:loggedIn.custId,
+          acctId: loggedIn.acctId
+        }
+      }
+      itemData['merch'].push(itemSold)
+      let writedata = JSON.stringify(itemData);
+      fs.writeFile('items.json', writedata);
+      const response = generateResponse(intent);
+      res.send(response);
+    } catch (e) {
+      // Handle "hard declines" e.g. insufficient funds, expired card, etc
+      // See https://stripe.com/docs/declines/codes for more
+      res.send({ error: e.message });
+    }
+  });
+
+
 
 app.post('/purchase', function(req, res) {
   fs.readFile('items.json', function(error, data) {
-    if (error) {
-      res.status(500).end()
-    } else {
-      const itemsJson = JSON.parse(data)
-      const itemsArray = itemsJson.music.concat(itemsJson.merch)
-      let total = 0
-      req.body.items.forEach(function(item) {
-        const itemJson = itemsArray.find(function(i) {
-          return i.id == item.id
-        })
-        total = total + itemJson.price * item.quantity
-      })
+      if (error) {
+          res.status(500).end()
+      } else {
+          const itemsJson = JSON.parse(data)
+          const itemsArray = itemsJson.music.concat(itemsJson.merch)
+          let total = 0
+          req.body.items.forEach(function(item) {
+              const itemJson = itemsArray.find(function(i) {
+                  return i.id == item.id
+              })
+              total = total + itemJson.price * item.quantity
+          })
 
-      stripe.charges.create({
-        amount: total,
-        source: req.body.stripeTokenId,
-        currency: 'usd'
-      }).then(function() {
-        console.log('Charge Successful')
-        res.json({ message: 'Successfully purchased items' })
-      }).catch(function() {
-        console.log('Charge Fail')
-        res.status(500).end()
-      })
-    }
+          stripe.charges.create({
+              amount: total,
+              source: req.body.stripeTokenId,
+              currency: 'usd'
+          }).then(function() {
+              console.log('Charge Successful')
+              res.json({
+                  message: 'Successfully purchased items'
+              })
+          }).catch(function() {
+              console.log('Charge Fail')
+              res.status(500).end()
+          })
+      }
   })
 })
+
+// app.get('/sell', function(req, res){
+//   console.log('sell')
+
+// })
+const generateResponse = intent => {
+  // Generate a response based on the intent's status
+  switch (intent.status) {
+    case "requires_action":
+    case "requires_source_action":
+      // Card requires authentication
+      return {
+        requiresAction: true,
+        paymentIntentId: intent.id,
+        clientSecret: intent.client_secret
+      };
+    case "requires_payment_method":
+    case "requires_source":
+      // Card was not properly authenticated, suggest a new payment method
+      return {
+        error: "Your card was denied, please provide a new payment method"
+      };
+    case "succeeded":
+      // Payment is complete, authentication not required
+      // To cancel the payment after capture you will need to issue a Refund (https://stripe.com/docs/api/refunds)
+      console.log("💰 Payment received!");
+      return { clientSecret: intent.client_secret };
+  }
+};
 
 app.listen(3000)
