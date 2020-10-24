@@ -202,6 +202,7 @@
         document.querySelector("#btn-sell").addEventListener("click", function(evt) {
             evt.preventDefault();
             pay(stripe, card, clientSecret);
+
         });
         });
 
@@ -247,12 +248,7 @@
                     },
                     body: JSON.stringify({
                     paymentIntentId: data.paymentIntent.id,
-                    id: uuidv4(),
-                    name: $("#signupform input[name=item]").val(),
-                    price: $("#signupform input[name=AskPrice]").val(),
-                    size: $("#signupform input[name=size]").val(),
-                    bidPrice: $("#signupform input[name=BidPrice]").val(),
-                    imgName: "Cofee.png"
+                    
                     })
                 })
                     .then(function(result) {
@@ -287,7 +283,17 @@
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify(orderData)
+                    body: JSON.stringify(
+                        
+                    {
+                        oD: orderData,
+                        id: uuidv4(),
+                        name: $("#signupform input[name=item]").val(),
+                        price: $("#signupform input[name=AskPrice]").val()*100,
+                        size: $("#signupform input[name=size]").val(),
+                        bidPrice: $("#signupform input[name=BidPrice]").val()*100,
+                        imgName: "Cofee.png"
+                    })
                     });
                 }
                 })
@@ -306,6 +312,8 @@
                     // orderComplete(paymentData.clientSecret);
                     // console.log('error paymentData clientSecret')
                 }
+                window.location.replace("http://localhost:3000/store");
+
                 });
             };
 

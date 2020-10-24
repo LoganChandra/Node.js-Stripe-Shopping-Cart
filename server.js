@@ -5,6 +5,7 @@ if (process.env.NODE_ENV !== 'production') {
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 const stripePublicKey = process.env.STRIPE_PUBLIC_KEY
 
+const { raw } = require('express')
 const express = require('express')
 const app = express()
 const fs = require('fs')
@@ -71,33 +72,35 @@ app.post('/signUp', function(req, res) {
   console.log(userData, token)
 
 
-  //Creating Customer
-  const account = stripe.accounts.create({
-    type: 'standard',
-    country: 'MY',
-    email: userData.email,
-    business_type: 'individual',
-    individual: {
-      first_name: userData.firstName,
-      last_name: userData.lastName,
-    },
-  }).then(function(response) {
-      console.log('Account:',response)
+  //Creating Account
+  // const account = stripe.accounts.create({
+  //   type: 'standard',
+  //   country: 'MY',
+  //   email: userData.email,
+  //   business_type: 'individual',
+  //   individual: {
+  //     first_name: userData.firstName,
+  //     last_name: userData.lastName,
+  //   }
+  // }).then(function(response) {
+  //     console.log('Account:',response)
 
+      console.log('Token: ', token)
       const customer = stripe.customers.create({
         description: userData.firstName + ' - Customer',
         name: userData.firstName + ' ' + userData.lastName,
         email: userData.email,
         source: token,
-      }, {
-        stripe_account: response.id,
-      }).then(function(custRes){
+      // }, {
+      //   stripe_account: response.id,
+      }
+      ).then(function(custRes){
 
-        console.log('Customer: ', custRes)
-        console.log(custRes, response.id)
+        console.log('Customer: ')
+        console.log(custRes)
 
-        userData['custId'] = custRes.id //saving customer id
-        userData['acctId'] = response.id //saving customer id
+        userData['id'] = custRes.id //saving customer id
+        // userData['acctId'] = response.id //saving customer id
         console.log(userData)
 
         let writedata = JSON.stringify(userData);
@@ -105,37 +108,15 @@ app.post('/signUp', function(req, res) {
 
       }).catch(function(error){
           console.log('Customer not created')
-          error.status(500).end()
       
       })
-
-      
-
-      // //Creating card for the customer
-      // const card = stripe.customers.createSource(
-      //   response.id, {
-      //       source: token
-      //   }
-      // ).then(function(response) {
-      //     console.log('card created')
-      //     console.log(response.id)
-      //     userData['cardId'] = response.id //saving customer id
-      //     let writedata = JSON.stringify(userData);
-      //     fs.writeFileSync('users.json', writedata);
-
-      //     console.log(userData)
-      // }).catch(function(){
-      //   console.log('Failed to create Card')
-      //   res.status(500).end()
-
-      // })
-
       console.log('Sign in Successful')
 
-  }).catch(function() {
-      console.log('Sign In Fail')
-      res.status(500).end()
-  })
+  // }).catch(function() {
+  //     console.log('Sign In Fail')
+  //     res.status(500).end()
+  // })
+
 
 })
 
@@ -174,72 +155,71 @@ app.post('/signUp', function(req, res) {
 
 //   })
 // })
+
   app.post("/forSale", function(req, res) {
-    const { paymentMethodId, paymentIntentId, items, currency, id, name, price, size, bidPrice,imgName } = req.body;
-  
+    const { paymentMethodId, paymentIntentId, items, currency } = req.body.oD;
+    const info = req.body
+    console.log('info: ',info)
     const orderAmount = 1500;
     var loggedIn = JSON.parse(fs.readFileSync('users.json', 'utf8'));
-    console.log('CREATING PENALTY ON BEHALF OF: ', loggedIn)
+    console.log('CREATING PENALTY ON BEHALF OF: ', paymentMethodId)
+    console.log('pm: ', loggedIn)
 
     try {
       let intent;
       if (!paymentIntentId) {
+        console.log('customer:', typeof(loggedIn.id))
 
-        const pmRes = null;
-        const paymentMethod = stripe.paymentMethods.create({
-          customer: loggedIn.custId,
-          payment_method: paymentMethodId,
-        }, {
-          stripeAccount: loggedIn.acctId,
-        }).then(function(res){
-          console.log('Payment method created: ', res)
-          pmRes = res 
-        })
-
+        const customer = stripe.customers.retrieve(
+          loggedIn.id
+        );
+        console.log('customer:', customer)
         // Create new PaymentIntent
         intent = stripe.paymentIntents.create({
           amount: orderAmount,
           currency: currency,
-          payment_method: pmRes.id,
+          // payment_method: paymentMethodId,
           confirmation_method: "manual",
           capture_method: "manual",
           confirm: true,
-          customer: loggedIn.custId,
-        }, {
-          stripe_account: loggedIn.acctId,
+          customer: loggedIn.id,
+        // }, {
+        //   stripe_account: loggedIn.acctId,
         }
         );
+
+        var itemData = JSON.parse(fs.readFileSync('items.json', 'utf8'));
+        var itemSold = {
+          id: uuidv4(),
+          name: req.body.name,
+          price: parseInt(req.body.price,10),
+          size: parseInt(req.body.size,10),
+          bidPrice: parseInt(req.body.bidPrice,10),
+          imgName: req.body.imgName,
+          seller: loggedIn.id
+        }
+        
+        itemData['merch'].push(itemSold)
+        let writedata = JSON.stringify(itemData);
+        console.log('write data: ', itemSold)
+        fs.writeFileSync('items.json', writedata);
+
+        
         console.log(intent)
       } else {
         // Confirm the PaymentIntent to place a hold on the card
         intent = stripe.paymentIntents.confirm(paymentIntentId);
         // console.log(intent)
+                
       }
   
       if (intent.status === "requires_capture") {
         console.log("❗ Charging the card for: " + intent.amount_capturable);
-        // Because capture_method was set to manual we need to manually capture in order to move the funds
-        // You have 7 days to capture a confirmed PaymentIntent
-        // To cancel a payment before capturing use .cancel() (https://stripe.com/docs/api/payment_intents/cancel)
+        
         intent = stripe.paymentIntents.capture(intent.id);
       }
       
-      var itemData = JSON.parse(fs.readFileSync('items.json', 'utf8'));
-      var itemSold = {
-        id: id,
-        name: name,
-        price: price,
-        size: size,
-        bidPrice: bidPrice,
-        imgName: imgName,
-        seller:{
-          custId:loggedIn.custId,
-          acctId: loggedIn.acctId
-        }
-      }
-      itemData['merch'].push(itemSold)
-      let writedata = JSON.stringify(itemData);
-      fs.writeFile('items.json', writedata);
+      
       const response = generateResponse(intent);
       res.send(response);
     } catch (e) {
@@ -259,17 +239,45 @@ app.post('/purchase', function(req, res) {
           const itemsJson = JSON.parse(data)
           const itemsArray = itemsJson.music.concat(itemsJson.merch)
           let total = 0
-          req.body.items.forEach(function(item) {
-              const itemJson = itemsArray.find(function(i) {
+          console.log(req.nody)
+          req.body.items.forEach(async function(item) {
+              const itemJson = await itemsArray.find(async function(i) {
+
+                console.log('ok here', i.seller);
+
+                //Paying sellers
+                const card = await stripe.customers.listSources(
+                  "cus_IFwiUikzalsrgZ",
+                  {object: 'card', limit: 1}
+                ).then(async function(res){
+                  console.log('Cust card: ', res)
+
+                  const payout = await stripe.payouts.create({
+                    amount: 500 * 100,
+                    currency: 'myr',
+                    destination: "cus_IFwiUikzalsrgZ"
+                  }).then(function(e){
+                    console.log('payout successful', e.message)
+                  }).catch(function(e){
+                    console.log('create payout unsuccessful', e.message)
+
+                  })
+                }).catch(function(e){
+                  console.log('list customers unsuccessful', e.message)
+
+                })
+                  
                   return i.id == item.id
               })
               total = total + itemJson.price * item.quantity
+
+              
           })
 
           stripe.charges.create({
               amount: total,
               source: req.body.stripeTokenId,
-              currency: 'usd'
+              currency: 'myr'
           }).then(function() {
               console.log('Charge Successful')
               res.json({
@@ -287,6 +295,14 @@ app.post('/purchase', function(req, res) {
 //   console.log('sell')
 
 // })
+
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+  });
+}
+
 const generateResponse = intent => {
   // Generate a response based on the intent's status
   switch (intent.status) {
