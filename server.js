@@ -231,65 +231,59 @@ app.post('/signUp', function(req, res) {
 
 
 
-app.post('/purchase', function(req, res) {
-  fs.readFile('items.json', function(error, data) {
+  app.post('/purchase', function(req, res) {
+    fs.readFile('items.json', function(error, data) {
       if (error) {
-          res.status(500).end()
+        res.status(500).end()
       } else {
-          const itemsJson = JSON.parse(data)
-          const itemsArray = itemsJson.music.concat(itemsJson.merch)
-          let total = 0
-          console.log(req.nody)
-          req.body.items.forEach(async function(item) {
-              const itemJson = await itemsArray.find(async function(i) {
-
-                console.log('ok here', i.seller);
-
-                //Paying sellers
-                const card = await stripe.customers.listSources(
-                  "cus_IFwiUikzalsrgZ",
-                  {object: 'card', limit: 1}
-                ).then(async function(res){
-                  console.log('Cust card: ', res)
-
-                  const payout = await stripe.payouts.create({
-                    amount: 500 * 100,
-                    currency: 'myr',
-                    destination: "cus_IFwiUikzalsrgZ"
-                  }).then(function(e){
-                    console.log('payout successful', e.message)
-                  }).catch(function(e){
-                    console.log('create payout unsuccessful', e.message)
-
-                  })
-                }).catch(function(e){
-                  console.log('list customers unsuccessful', e.message)
-
-                })
-                  
-                  return i.id == item.id
-              })
-              total = total + itemJson.price * item.quantity
-
-              
+        const itemsJson = JSON.parse(data)
+        const itemsArray = itemsJson.music.concat(itemsJson.merch)
+        let total = 0
+        req.body.items.forEach(function(item) {
+          const itemJson = itemsArray.find(function(i) {
+            return i.id == item.id
           })
-
-          stripe.charges.create({
-              amount: total,
-              source: req.body.stripeTokenId,
-              currency: 'myr'
-          }).then(function() {
-              console.log('Charge Successful')
-              res.json({
-                  message: 'Successfully purchased items'
-              })
-          }).catch(function() {
-              console.log('Charge Fail')
-              res.status(500).end()
-          })
+          total = total + itemJson.price * item.quantity
+        })
+  
+        stripe.charges.create({
+          amount: total,
+          source: req.body.stripeTokenId,
+          currency: 'usd'
+        }).then(function() {
+          console.log('Charge Successful')
+          res.json({ message: 'Successfully purchased items' })
+        }).catch(function() {
+          console.log('Charge Fail')
+          res.status(500).end()
+        })
       }
+    })
   })
-})
+
+// console.log('ok here', i.seller);
+
+              //   //Paying sellers
+              //   const card = await stripe.customers.listSources(
+              //     "cus_IFwiUikzalsrgZ",
+              //     {object: 'card', limit: 1}
+              //   ).then(async function(res){
+              //     console.log('Cust card: ', res)
+
+              //     const payout = await stripe.payouts.create({
+              //       amount: 500 * 100,
+              //       currency: 'myr',
+              //       destination: "cus_IFwiUikzalsrgZ"
+              //     }).then(function(e){
+              //       console.log('payout successful', e.message)
+              //     }).catch(function(e){
+              //       console.log('create payout unsuccessful', e.message)
+
+              //     })
+              //   }).catch(function(e){
+              //     console.log('list customers unsuccessful', e.message)
+
+              //   })
 
 // app.get('/sell', function(req, res){
 //   console.log('sell')
